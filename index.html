@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>複利旅遊基金計算機 - 專屬規劃表</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fb;
+        }
+        .card {
+            background-color: white;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .result-box {
+            background-color: #ecfdf5; /* 淺綠色背景，突出顯示 */
+            border-left: 5px solid #10b981; /* 綠色邊框 */
+        }
+        .input-group input {
+            text-align: right;
+        }
+        .fixed-info {
+            background-color: #e0f7fa; /* 淺藍綠色 */
+            color: #00838f;
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8 min-h-screen flex items-center justify-center">
+
+    <div id="app" class="card w-full max-w-2xl rounded-2xl p-6 sm:p-10">
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-2 text-center">
+            ✈️ 無罪惡感旅遊基金規劃表
+        </h1>
+        <p class="text-center text-gray-500 mb-8">
+            讓你的資產紅利為旅費買單！目標：每年免費出國一次。
+        </p>
+        
+        <!-- 基礎假設提示 (已調整) -->
+        <div class="fixed-info p-3 rounded-lg text-center font-semibold text-sm mb-6">
+            注意：以下計算皆為根據 **6% 複利工具** 假設的教育模型
+        </div>
+
+        <!-- 區域一：旅遊成本計算 -->
+        <h2 class="text-xl font-bold text-gray-800 border-b pb-2 mb-4">步驟一：計算您的年度旅費目標</h2>
+        <div id="costTable" class="space-y-3 mb-8">
+            <div class="input-group flex justify-between items-center pb-2 border-b">
+                <label class="text-base text-gray-700">來回機票價格 (NTD)</label>
+                <input type="number" id="airfare" value="30000" min="0" class="w-1/3 p-2 border rounded-lg focus:ring-blue-500 text-base">
+            </div>
+            <div class="input-group flex justify-between items-center pb-2 border-b">
+                <label class="text-base text-gray-700">住宿費用 (NTD)</label>
+                <input type="number" id="accommodation" value="40000" min="0" class="w-1/3 p-2 border rounded-lg focus:ring-blue-500 text-base">
+            </div>
+            <div class="input-group flex justify-between items-center pb-2 border-b">
+                <label class="text-base text-gray-700">飲食費用 (NTD)</label>
+                <input type="number" id="food" value="15000" min="0" class="w-1/3 p-2 border rounded-lg focus:ring-blue-500 text-base">
+            </div>
+            <div class="input-group flex justify-between items-center pb-2 border-b">
+                <label class="text-base text-gray-700">交通費 (NTD)</label>
+                <input type="number" id="transport" value="5000" min="0" class="w-1/3 p-2 border rounded-lg focus:ring-blue-500 text-base">
+            </div>
+            <div class="input-group flex justify-between items-center pb-2 border-b">
+                <label class="text-base text-gray-700">其他雜項費用 (NTD)</label>
+                <input type="number" id="other" value="10000" min="0" class="w-1/3 p-2 border rounded-lg focus:ring-blue-500 text-base">
+            </div>
+            <div class="pt-4 flex justify-between items-center font-extrabold text-xl text-blue-700">
+                <span>年度旅遊總目標 (C):</span>
+                <span id="totalCostDisplay">NT$100,000</span>
+            </div>
+        </div>
+
+
+        <!-- 區域二：目標實現時間與結果 -->
+        <h2 class="text-xl font-bold text-gray-800 border-b pb-2 mb-4">步驟二：設定您的複利啟動年限</h2>
+        <div class="space-y-6">
+            <!-- 欄位 2: 幾年後開始免費旅遊 -->
+            <div>
+                <label for="yearsToStart" class="block text-sm font-medium text-gray-700 mb-1">
+                    請選擇：最快幾年後想開始每年免費旅遊？
+                </label>
+                <select id="yearsToStart" onchange="calculateFund()" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-lg">
+                    <option value="4" data-label="高效衝刺型">第 4 年 (高效衝刺型)</option>
+                    <option value="7" data-label="穩健平衡型" selected>第 7 年 (穩健平衡型)</option>
+                    <option value="11" data-label="輕鬆長跑型">第 11 年 (輕鬆長跑型)</option>
+                </select>
+            </div>
+            <!-- 年期說明 (已移動到下方) -->
+            <div id="planDescription" class="mt-3 p-3 text-sm rounded-lg bg-gray-50 border border-gray-200 text-gray-700">
+                此為穩健且平衡的規劃，在相對適中的每月投入下，您有 7 年的時間累積資產，享受複利的成長。適合大多數上班族。
+            </div>
+        </div>
+
+        <!-- 結果顯示區 -->
+        <div id="results" class="mt-8 space-y-4">
+            <h2 class="text-2xl font-bold text-gray-800 border-b pb-2 mb-4">🚀 您的複利旅遊自由目標</h2>
+
+            <!-- 終極目標本金 (已修改為固定顯示 $900,000) -->
+            <div class="result-box p-4 rounded-lg">
+                <!-- 刪除「目標：每年產出...」 -->
+                <p class="text-3xl font-extrabold text-green-800 mt-1">
+                    旅遊總基金：NT$900,000
+                </p>
+                <!-- 刪除 P 說明 -->
+            </div>
+            
+            <!-- 每月儲蓄 (使用固定數值) -->
+            <div class="result-box bg-blue-50 p-4 rounded-lg border-blue-500">
+                <p class="text-base text-gray-700 font-semibold">
+                    <span id="yearsToStartDisplay" class="text-blue-700">7</span> 年衝刺計畫 (<span id="planLabel" class="font-bold">穩健平衡型</span>)
+                </p>
+                <p class="text-3xl font-extrabold text-blue-800 mt-1">
+                    每月需儲蓄：<span id="requiredMonthlySavings">NT$15,000</span>
+                </p>
+                <p class="text-sm text-gray-500 mt-1">
+                    (這項規劃建議為您設定的年限所需的建議每月投入金額)
+                </p>
+            </div>
+
+            <!-- 最終 CTA 與免責聲明 -->
+            <p class="text-xs text-gray-400 pt-4 text-center">
+                * 旅遊總基金以 **6% 複利** 計算。以上數值為我經過詳細研究後整理出來的規劃建議。
+            </p>
+            <div class="mt-4 text-center text-sm font-semibold text-indigo-700 p-2 border border-indigo-200 rounded-lg">
+                如果想了解更多細節，歡迎找我諮詢！
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const inputFields = ['airfare', 'accommodation', 'food', 'transport', 'other'];
+        
+        // 固定每月儲蓄金額的對應表 (依據您的要求設定)
+        const fixedMonthlySavings = {
+            4: 37500,
+            7: 15000,
+            11: 7500
+        };
+
+        // 新增年期說明的對應表
+        const planDescriptions = {
+            4: "選擇此計畫代表您追求速度，通過較高額的每月投入，在第 4 年即可啟動您的複利旅遊金。適合收入穩定、儲蓄能力強的衝刺者。",
+            7: "此為穩健且平衡的規劃，在相對適中的每月投入下，您有 7 年的時間累積資產，享受複利的成長。適合大多數上班族。",
+            11: "這是最輕鬆無壓力的長跑規劃，用時間換取空間。較低的每月投入，讓您在 11 年後達成目標，適合剛開始理財的小資族。"
+        };
+
+        // 核心計算邏輯
+        function calculateFund() {
+            // --- 步驟一：計算總成本 C ---
+            let C = 0;
+            inputFields.forEach(id => {
+                const value = parseFloat(document.getElementById(id).value) || 0;
+                C += value;
+            });
+            
+            // --- 輸入驗證 ---
+            if (C <= 0) {
+                document.getElementById('totalCostDisplay').textContent = '請輸入旅費金額！';
+                return;
+            }
+
+            const yearsToStartInput = document.getElementById('yearsToStart');
+            const T = parseInt(yearsToStartInput.value); // Years to Start
+            const selectedOption = yearsToStartInput.options[yearsToStartInput.selectedIndex];
+            const planLabel = selectedOption.getAttribute('data-label');
+
+            // --- 步驟二：設定每月儲蓄 M (使用固定數值) ---
+            const requiredMonthlySavings = fixedMonthlySavings[T] || 0; // 查找固定值
+
+
+            // --- 結果格式化與顯示 ---
+            
+            // 格式化為新台幣
+            const formatCurrency = (number) => {
+                // 使用 Math.round 避免小數點
+                return new Intl.NumberFormat('zh-TW', { style: 'currency', currency: 'TWD', maximumFractionDigits: 0 }).format(Math.round(number));
+            };
+            
+            // 總成本顯示
+            document.getElementById('totalCostDisplay').textContent = formatCurrency(C);
+
+            // 每月儲蓄使用固定值
+            document.getElementById('requiredMonthlySavings').textContent = formatCurrency(requiredMonthlySavings);
+            
+            // 年限與標籤顯示
+            document.getElementById('yearsToStartDisplay').textContent = T;
+            document.getElementById('planLabel').textContent = planLabel;
+            
+            // 更新年期說明
+            document.getElementById('planDescription').textContent = planDescriptions[T] || '';
+            
+            // 確保結果區顯示
+            document.getElementById('results').classList.remove('hidden');
+
+            // 滾動到結果區 (改善用戶體驗)
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // 綁定所有成本輸入和選擇框的事件
+        window.onload = function() {
+            inputFields.forEach(id => {
+                document.getElementById(id).addEventListener('input', calculateFund);
+            });
+            document.getElementById('yearsToStart').addEventListener('change', calculateFund);
+            // 頁面載入時，執行一次初始計算
+            calculateFund(); 
+        };
+
+    </script>
+</body>
+</html>
